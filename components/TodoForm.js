@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Form, Button, Container, Row, Col } from 'react-bootstrap';
 import TodoList from './TodoList';
 
@@ -6,15 +6,33 @@ const TodoForm = () => {
   const [task, setTask] = useState('');
   const [tasks, setTasks] = useState([]);
 
-  const handleSubmit = (e) => {
+  useEffect(() => {
+    const fetchTasks = async () => {
+      const res = await fetch('/api/tasks');
+      const data = await res.json();
+      setTasks(data);
+    };
+    fetchTasks();
+  }, []);
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!task.trim()) return;
-    setTasks([...tasks, task]);
+
+    const res = await fetch('/api/tasks', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ task }),
+    });
+
+    const newTask = await res.json();
+    setTasks([newTask, ...tasks]);
     setTask('');
   };
 
-  const handleDelete = (index) => {
-    setTasks(tasks.filter((_, i) => i !== index));
+  const handleDelete = async (id) => {
+    await fetch(`/api/tasks?id=${id}`, { method: 'DELETE' });
+    setTasks(tasks.filter(t => t._id !== id));
   };
 
   return (
@@ -23,7 +41,7 @@ const TodoForm = () => {
         <Col md={{ span: 6, offset: 3 }}>
           <h3>To-Do List</h3>
           <Form onSubmit={handleSubmit}>
-            <Form.Group className="mb-3" controlId="formTask">
+            <Form.Group className="mb-3">
               <Form.Control
                 type="text"
                 placeholder="Enter a task"
@@ -31,11 +49,11 @@ const TodoForm = () => {
                 onChange={(e) => setTask(e.target.value)}
               />
             </Form.Group>
-            <Button variant="primary" type="submit" block>
+            <Button variant="primary" type="submit" block="true">
               Add Task
             </Button>
           </Form>
-          <TodoList handleDelete={handleDelete} tasks={tasks}/>
+          <TodoList tasks={tasks} handleDelete={handleDelete} />
         </Col>
       </Row>
     </Container>
