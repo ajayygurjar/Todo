@@ -52,6 +52,18 @@ const TodoForm = () => {
     )
   );
 };
+const handleEditTask = async (id, newTask, newStatus) => {
+  await fetch('/api/tasks', {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ id, task: newTask, status: newStatus }),
+  });
+
+  setTasks(prev =>
+    prev.map(t => (t._id === id ? { ...t, task: newTask, status: newStatus } : t))
+  );
+};
+
 
 
   return (
@@ -72,7 +84,7 @@ const TodoForm = () => {
               Add Task
             </Button>
           </Form>
-          <TodoList tasks={tasks} handleDelete={handleDelete} handleStatusChange={handleStatusChange} />
+          <TodoList tasks={tasks} handleDelete={handleDelete} handleStatusChange={handleStatusChange} handleEditTask={handleEditTask} />
         </Col>
       </Row>
     </Container>

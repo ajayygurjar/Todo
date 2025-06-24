@@ -69,16 +69,19 @@ export default async function handler(req, res) {
     }
   }
   else if (req.method === 'PATCH') {
-  const { id, status } = req.body;
+  const { id, status,task } = req.body;
 
-  if (!id || !status) {
+  if (!id) {
     return res.status(400).json({ message: 'ID and status required' });
   }
 
+  const updateFields = {};
+if (status) updateFields.status = status;
+if (task) updateFields.task = task;
   try {
     const result = await db.collection('todos').updateOne(
       { _id: new ObjectId(id) },
-      { $set: { status } }
+      { $set: updateFields }
     );
     res.status(200).json({ message: 'Status updated' });
   } catch (err) {
