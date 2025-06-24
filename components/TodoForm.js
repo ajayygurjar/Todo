@@ -5,6 +5,7 @@ import TodoList from './TodoList';
 const TodoForm = () => {
   const [task, setTask] = useState('');
   const [tasks, setTasks] = useState([]);
+  const [status, setStatus] = useState('pending');
 
   useEffect(() => {
     const fetchTasks = async () => {
@@ -22,18 +23,36 @@ const TodoForm = () => {
     const res = await fetch('/api/tasks', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ task }),
+      body: JSON.stringify({ task,status }),
     });
 
     const newTask = await res.json();
     setTasks([newTask, ...tasks]);
     setTask('');
+    setStatus('pending');
   };
 
   const handleDelete = async (id) => {
     await fetch(`/api/tasks?id=${id}`, { method: 'DELETE' });
     setTasks(tasks.filter(t => t._id !== id));
   };
+
+  const handleStatusChange = async (id, currentStatus) => {
+  const newStatus = currentStatus === 'pending' ? 'completed' : 'pending';
+
+  await fetch('/api/tasks', {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ id, status: newStatus }),
+  });
+
+  setTasks((prev) =>
+    prev.map((t) =>
+      t._id === id ? { ...t, status: newStatus } : t
+    )
+  );
+};
+
 
   return (
     <Container className="mt-4">
@@ -53,7 +72,7 @@ const TodoForm = () => {
               Add Task
             </Button>
           </Form>
-          <TodoList tasks={tasks} handleDelete={handleDelete} />
+          <TodoList tasks={tasks} handleDelete={handleDelete} handleStatusChange={handleStatusChange} />
         </Col>
       </Row>
     </Container>

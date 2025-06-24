@@ -30,6 +30,7 @@ export default async function handler(req, res) {
 
     const newTask = {
       task,
+      status: 'pending',
       createdAt: new Date().toISOString(),
     };
 
@@ -67,9 +68,28 @@ export default async function handler(req, res) {
       res.status(500).json({ message: 'Internal server error' });
     }
   }
+  else if (req.method === 'PATCH') {
+  const { id, status } = req.body;
+
+  if (!id || !status) {
+    return res.status(400).json({ message: 'ID and status required' });
+  }
+
+  try {
+    const result = await db.collection('todos').updateOne(
+      { _id: new ObjectId(id) },
+      { $set: { status } }
+    );
+    res.status(200).json({ message: 'Status updated' });
+  } catch (err) {
+    console.error('Error updating status:', err);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+}
+
 
   else {
-    res.setHeader('Allow', ['GET', 'POST', 'DELETE']);
+    res.setHeader('Allow', ['GET', 'POST', 'DELETE','PATCH']);
     res.status(405).end(`Method ${req.method} Not Allowed`);
   }
 }
